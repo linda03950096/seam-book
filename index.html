@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <nav id="toc"></nav>
+
+    <div id="stage">
+      <div id="edge-left" class="edge"></div>
+      <div id="edge-right" class="edge"></div>
+      <div id="book-holder"></div>
+    </div>
+
+    <div id="progress">
+      <input id="progress-range" type="range" min="0" max="1" value="0" step="1" aria-label="페이지 이동" />
+      <span id="page-label"></span>
+    </div>
+
+    <div id="nav-buttons">
+      <button id="btn-prev" aria-label="이전 페이지">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-next" aria-label="다음 페이지">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+  <script src="config.js"></script>
+  <script src="book.js"></script>
+</body>
+</html>

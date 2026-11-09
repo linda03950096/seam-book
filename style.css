@@ -1,0 +1,270 @@
+:root {
+  --bg: #131313;
+  --cover: #2180f5;
+  --ratio: 1; /* JS가 config.js 값으로 덮어씀 */
+  /* 데스크톱: 펼친 두 페이지가 화면 가로 78%, 세로 70% 안에 들어가도록 */
+  --page-h: min(70vh, calc(39vw / var(--ratio)));
+  --page-w: calc(var(--page-h) * var(--ratio));
+  --edge-max: calc(var(--page-w) * 0.02);
+  --t: 0.7s;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app { position: relative; width: 100vw; height: 100vh; height: 100dvh; }
+
+/* ---------- 책 무대 ---------- */
+#stage {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  width: calc(var(--page-w) * 2);
+  height: var(--page-h);
+  transform: translate(-50%, -50%);
+}
+
+#book-holder,
+#book {
+  position: absolute;
+  inset: 0;
+  transition: transform var(--t) ease;
+}
+
+/* 표지가 닫혀 있을 때 책을 화면 가운데로 */
+#stage.front-closed #book-holder { transform: translateX(calc(var(--page-w) * -0.5)); }
+#stage.back-closed  #book-holder { transform: translateX(calc(var(--page-w) *  0.5)); }
+
+/* page-flip 라이브러리 기본 크기 보정 (안 하면 페이지가 0 크기로 접힘) */
+#book.stf__parent,
+#book .stf__parent { width: 100%; height: 100%; min-width: 0 !important; min-height: 0 !important; }
+#book .stf__wrapper { position: relative; width: 100%; height: 100%; padding-bottom: 0 !important; }
+
+/* ---------- 페이지 ---------- */
+.page {
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+}
+
+.page img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.page.cover { background: var(--cover); }
+
+/* 이미지가 아직 없을 때 보이는 자리표시 */
+.page .placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b5b5b5;
+  font-size: clamp(14px, 1.6vw, 28px);
+  letter-spacing: 0.08em;
+}
+.page.cover .placeholder { color: rgba(255, 255, 255, 0.85); }
+.page.img-ok .placeholder { display: none; }
+
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 앞표지 책등 쪽 하이라이트/그림자 */
+.page.front-cover::after {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.18) 1.6%, rgba(0,0,0,.06) 2.9%,
+      rgba(255,255,255,.28) 3.3%, rgba(255,255,255,.18) 3.5%, rgba(0,0,0,.08) 3.7%, transparent 4.3%),
+    linear-gradient(90deg, rgba(0,0,0,.035) 0%, transparent 40%);
+}
+.page.back-cover::after {
+  background:
+    linear-gradient(270deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.18) 1.6%, rgba(0,0,0,.06) 2.9%,
+      rgba(255,255,255,.28) 3.3%, rgba(255,255,255,.18) 3.5%, rgba(0,0,0,.08) 3.7%, transparent 4.3%),
+    linear-gradient(270deg, rgba(0,0,0,.035) 0%, transparent 40%);
+}
+
+/* 펼친 면 가운데(제본선) 그림자 — page-flip이 --left/--right 클래스를 붙여줌 */
+#stage:not(.portrait) .page:not(.cover).--left::after {
+  left: auto; right: 0; width: 12%;
+  background: linear-gradient(90deg, transparent 0%, rgba(12,18,28,.025) 38%, rgba(8,12,18,.09) 76%, rgba(0,0,0,.18) 100%);
+}
+#stage:not(.portrait) .page:not(.cover).--right::after {
+  right: auto; left: 0; width: 12%;
+  background: linear-gradient(90deg, rgba(0,0,0,.18) 0%, rgba(8,12,18,.09) 24%, rgba(12,18,28,.025) 62%, transparent 100%);
+}
+
+/* ---------- 책 옆면(종이 두께) ---------- */
+.edge {
+  position: absolute;
+  top: 0.4%;
+  height: 99.2%;
+  width: calc(var(--edge-max) * var(--ratio-edge, 0));
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0px, rgba(0,0,0,.14) 1px, transparent 1px, transparent 2px),
+    linear-gradient(180deg, #e9e9e9, #d4d4d4 50%, #e9e9e9);
+  transition: width .4s ease, opacity .3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+#edge-left  { right: 100%; border-radius: 2px 0 0 2px; }
+#edge-right { left: 100%;  border-radius: 0 2px 2px 0; }
+#stage.front-closed .edge,
+#stage.back-closed .edge,
+#stage.portrait .edge { opacity: 0; }
+
+/* ---------- 목차 ---------- */
+#toc {
+  position: absolute;
+  left: 3.4vw;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+  z-index: 5;
+}
+.toc-item {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(10px, 0.78vw, 14px);
+  color: rgba(255, 255, 255, 0.3);
+  transition: color .25s ease;
+}
+.toc-item:hover { color: rgba(255, 255, 255, 0.65); }
+.toc-item.active { color: #fff; }
+
+/* ---------- 진행 바 ---------- */
+#progress {
+  position: absolute;
+  left: 50%;
+  top: 90%;
+  transform: translate(-50%, -50%);
+  width: 45vw;
+  min-width: 260px;
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 5;
+}
+#page-label {
+  flex: none;
+  min-width: 64px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+#progress-range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 7px;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  outline: none;
+}
+#progress-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 38px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fff;
+  border: 0;
+}
+#progress-range::-moz-range-thumb {
+  width: 38px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fff;
+  border: 0;
+}
+
+/* ---------- 모바일 버튼 ---------- */
+#nav-buttons {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(5% + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  gap: 24px;
+  z-index: 5;
+}
+#nav-buttons button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+#nav-buttons button:active { background: rgba(255, 255, 255, 0.2); }
+
+/* ---------- 모바일 (한 페이지씩) ---------- */
+@media (max-width: 760px) {
+  :root {
+    --page-w: min(88vw, calc(62vh * var(--ratio)), 570px);
+    --page-h: calc(var(--page-w) / var(--ratio));
+  }
+  #stage { width: var(--page-w); top: 44%; }
+  #stage.front-closed #book-holder,
+  #stage.back-closed #book-holder { transform: none; }
+  #toc {
+    top: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    width: 92vw;
+  }
+  .toc-item { font-size: 11px; }
+  #progress { top: auto; bottom: calc(5% + 56px + 24px + env(safe-area-inset-bottom)); width: 80vw; min-width: 0; transform: translateX(-50%); }
+  #nav-buttons { display: flex; }
+}
+
+@media (max-height: 520px) and (min-width: 761px) {
+  :root { --page-h: min(64vh, calc(31vw / var(--ratio))); }
+}
+
+html.resizing #book-holder,
+html.resizing .edge { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t: 0.01ms; }
+}
